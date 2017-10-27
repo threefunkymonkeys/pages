@@ -12,6 +12,7 @@ import (
 
 var leftDelimiter = "{{"
 var rightDelimiter = "}}"
+var viewsDir = "./views"
 
 type Page struct {
 	Title    string
@@ -31,10 +32,14 @@ func SetEscapeStrings(left, right string) {
 	rightDelimiter = right
 }
 
+func SetViewsDir(dirname string) {
+	viewsDir = dirname
+}
+
 func parseTemplates(baseDir string) (*template.Template, error) {
 	var allFiles []string
 
-	templatesDir := fmt.Sprintf("./views/%s/", baseDir)
+	templatesDir := fmt.Sprintf("./%s/%s/", viewsDir, baseDir)
 
 	if layouts, err := ioutil.ReadDir("./views/layout"); err == nil {
 		for _, file := range layouts {
