@@ -6,7 +6,6 @@ import (
 	"html/template"
 	"io"
 	"io/ioutil"
-	"os"
 	"strings"
 )
 
@@ -87,8 +86,6 @@ func Render(writer io.Writer, page Page, tplDir string) error {
 	if err != nil {
 		return err
 	}
-
-	templates.ExecuteTemplate(os.Stdout, "_header.html", nil)
 
 	templates.ExecuteTemplate(buf, page.Template, nil)
 
