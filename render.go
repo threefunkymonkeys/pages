@@ -39,24 +39,26 @@ func SetViewsDir(dirname string) {
 func parseTemplates(baseDir string) (*template.Template, error) {
 	var allFiles []string
 
+	sharedDir := fmt.Sprintf("./%s/shared/", viewsDir)
+	layoutsDir := fmt.Sprintf("./%s/layout/", viewsDir)
 	templatesDir := fmt.Sprintf("./%s/%s/", viewsDir, baseDir)
 
-	if layouts, err := ioutil.ReadDir("./views/layout"); err == nil {
+	if layouts, err := ioutil.ReadDir(layoutsDir); err == nil {
 		for _, file := range layouts {
 			filename := file.Name()
 			if strings.HasSuffix(filename, ".html") {
-				allFiles = append(allFiles, "./views/layout/"+filename)
+				allFiles = append(allFiles, layoutsDir+filename)
 			}
 		}
 	} else {
 		return nil, err
 	}
 
-	if shared, err := ioutil.ReadDir("./views/shared"); err == nil {
+	if shared, err := ioutil.ReadDir(sharedDir); err == nil {
 		for _, file := range shared {
 			filename := file.Name()
 			if strings.HasSuffix(filename, ".html") {
-				allFiles = append(allFiles, "./views/shared/"+filename)
+				allFiles = append(allFiles, sharedDir+filename)
 			}
 		}
 	} else {
