@@ -12,6 +12,7 @@ import (
 var leftDelimiter = "{{"
 var rightDelimiter = "}}"
 var viewsDir = "./views"
+var layoutFileName = "application.html"
 
 type Page struct {
 	Title    string
@@ -33,6 +34,10 @@ func SetEscapeStrings(left, right string) {
 
 func SetViewsDir(dirname string) {
 	viewsDir = dirname
+}
+
+func SetLayoutName(layoutName string) {
+	lauyoutFileName = layoutName + ".html"
 }
 
 func parseTemplates(baseDir string) (*template.Template, error) {
@@ -81,7 +86,7 @@ func Render(writer io.Writer, page Page, tplDir string) error {
 
 	content := layoutContent{Page: page, Content: template.HTML(buf.String())}
 
-	templates.ExecuteTemplate(writer, "application.html", content)
+	templates.ExecuteTemplate(writer, layoutFileName, content)
 
 	return nil
 }
