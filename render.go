@@ -36,46 +36,49 @@ func SetViewsDir(dirname string) {
 }
 
 func parseTemplates(baseDir string) (*template.Template, error) {
-	var allFiles []string
+	var allFiles, dirFiles []string
 
 	sharedDir := filepath.Join(viewsDir, "shared")
 	layoutsDir := filepath.Join(viewsDir, "layout")
 	templatesDir := filepath.Join(viewsDir, baseDir)
 
-	if layouts, err := ioutil.ReadDir(layoutsDir); err == nil {
-		for _, file := range layouts {
-			filename := file.Name()
-			if strings.HasSuffix(filename, ".html") {
-				allFiles = append(allFiles, filepath.Join(layoutsDir, filename))
-			}
-		}
-	} else {
+	dirFiles, err := getTemplateFilenames(sharedDir)
+	if err != nil {
 		return nil, err
 	}
+	allFiles = append(allFiles, dirFiles...)
 
-	if shared, err := ioutil.ReadDir(sharedDir); err == nil {
-		for _, file := range shared {
-			filename := file.Name()
-			if strings.HasSuffix(filename, ".html") {
-				allFiles = append(allFiles, filepath.Join(sharedDir, filename))
-			}
-		}
-	} else {
+	dirFiles, err = getTemplateFilenames(layoutsDir)
+	if err != nil {
 		return nil, err
 	}
+	allFiles = append(allFiles, dirFiles...)
 
-	if files, err := ioutil.ReadDir(templatesDir); err == nil {
-		for _, file := range files {
-			filename := file.Name()
-			if strings.HasSuffix(filename, ".html") {
-				allFiles = append(allFiles, filepath.Join(templatesDir, filename))
-			}
-		}
-	} else {
+	dirFiles, err = getTemplateFilenames(templatesDir)
+	if err != nil {
 		return nil, err
 	}
+	allFiles = append(allFiles, dirFiles...)
 
 	return template.New("").Delims(leftDelimiter, rightDelimiter).ParseFiles(allFiles...)
+}
+
+func getTemplateFilenames(dir string) ([]string, error) {
+	var filenames []string
+
+	entries, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, entry := range entries {
+		filename := entry.Name()
+		if strings.HasSuffix(filename, ".html") {
+			filenames = append(filenames, filepath.Join(dir, filename))
+		}
+	}
+
+	return filenames, nil
 }
 
 func Render(writer io.Writer, page Page, tplDir string) error {
