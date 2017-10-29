@@ -36,31 +36,18 @@ func SetViewsDir(dirname string) {
 }
 
 func parseTemplates(baseDir string) (*template.Template, error) {
-	var allFiles, dirFiles []string
+	var templates []string
 
-	sharedDir := filepath.Join(viewsDir, "shared")
-	layoutsDir := filepath.Join(viewsDir, "layout")
-	templatesDir := filepath.Join(viewsDir, baseDir)
+	for _, dir := range []string{"shared", "layout", baseDir} {
+		files, err := getTemplateFilenames(filepath.Join(viewsDir, dir))
+		if err != nil {
+			return nil, err
+		}
 
-	dirFiles, err := getTemplateFilenames(sharedDir)
-	if err != nil {
-		return nil, err
+		templates = append(templates, files...)
 	}
-	allFiles = append(allFiles, dirFiles...)
 
-	dirFiles, err = getTemplateFilenames(layoutsDir)
-	if err != nil {
-		return nil, err
-	}
-	allFiles = append(allFiles, dirFiles...)
-
-	dirFiles, err = getTemplateFilenames(templatesDir)
-	if err != nil {
-		return nil, err
-	}
-	allFiles = append(allFiles, dirFiles...)
-
-	return template.New("").Delims(leftDelimiter, rightDelimiter).ParseFiles(allFiles...)
+	return template.New("").Delims(leftDelimiter, rightDelimiter).ParseFiles(templates...)
 }
 
 func getTemplateFilenames(dir string) ([]string, error) {
