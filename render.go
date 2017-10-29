@@ -2,10 +2,10 @@ package pages
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 )
 
@@ -36,46 +36,36 @@ func SetViewsDir(dirname string) {
 }
 
 func parseTemplates(baseDir string) (*template.Template, error) {
-	var allFiles []string
+	var templates []string
 
-	sharedDir := fmt.Sprintf("./%s/shared/", viewsDir)
-	layoutsDir := fmt.Sprintf("./%s/layout/", viewsDir)
-	templatesDir := fmt.Sprintf("./%s/%s/", viewsDir, baseDir)
-
-	if layouts, err := ioutil.ReadDir(layoutsDir); err == nil {
-		for _, file := range layouts {
-			filename := file.Name()
-			if strings.HasSuffix(filename, ".html") {
-				allFiles = append(allFiles, layoutsDir+filename)
-			}
+	for _, dir := range []string{"shared", "layout", baseDir} {
+		files, err := getTemplateFilenames(filepath.Join(viewsDir, dir))
+		if err != nil {
+			return nil, err
 		}
-	} else {
+
+		templates = append(templates, files...)
+	}
+
+	return template.New("").Delims(leftDelimiter, rightDelimiter).ParseFiles(templates...)
+}
+
+func getTemplateFilenames(dir string) ([]string, error) {
+	var filenames []string
+
+	entries, err := ioutil.ReadDir(dir)
+	if err != nil {
 		return nil, err
 	}
 
-	if shared, err := ioutil.ReadDir(sharedDir); err == nil {
-		for _, file := range shared {
-			filename := file.Name()
-			if strings.HasSuffix(filename, ".html") {
-				allFiles = append(allFiles, sharedDir+filename)
-			}
+	for _, entry := range entries {
+		filename := entry.Name()
+		if strings.HasSuffix(filename, ".html") {
+			filenames = append(filenames, filepath.Join(dir, filename))
 		}
-	} else {
-		return nil, err
 	}
 
-	if files, err := ioutil.ReadDir(templatesDir); err == nil {
-		for _, file := range files {
-			filename := file.Name()
-			if strings.HasSuffix(filename, ".html") {
-				allFiles = append(allFiles, templatesDir+filename)
-			}
-		}
-	} else {
-		return nil, err
-	}
-
-	return template.New("").Delims(leftDelimiter, rightDelimiter).ParseFiles(allFiles...)
+	return filenames, nil
 }
 
 func Render(writer io.Writer, page Page, tplDir string) error {
