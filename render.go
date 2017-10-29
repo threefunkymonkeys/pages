@@ -2,10 +2,10 @@ package pages
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 )
 
@@ -38,15 +38,15 @@ func SetViewsDir(dirname string) {
 func parseTemplates(baseDir string) (*template.Template, error) {
 	var allFiles []string
 
-	sharedDir := fmt.Sprintf("./%s/shared/", viewsDir)
-	layoutsDir := fmt.Sprintf("./%s/layout/", viewsDir)
-	templatesDir := fmt.Sprintf("./%s/%s/", viewsDir, baseDir)
+	sharedDir := filepath.Join(viewsDir, "shared")
+	layoutsDir := filepath.Join(viewsDir, "layout")
+	templatesDir := filepath.Join(viewsDir, baseDir)
 
 	if layouts, err := ioutil.ReadDir(layoutsDir); err == nil {
 		for _, file := range layouts {
 			filename := file.Name()
 			if strings.HasSuffix(filename, ".html") {
-				allFiles = append(allFiles, layoutsDir+filename)
+				allFiles = append(allFiles, filepath.Join(layoutsDir, filename))
 			}
 		}
 	} else {
@@ -57,7 +57,7 @@ func parseTemplates(baseDir string) (*template.Template, error) {
 		for _, file := range shared {
 			filename := file.Name()
 			if strings.HasSuffix(filename, ".html") {
-				allFiles = append(allFiles, sharedDir+filename)
+				allFiles = append(allFiles, filepath.Join(sharedDir, filename))
 			}
 		}
 	} else {
@@ -68,7 +68,7 @@ func parseTemplates(baseDir string) (*template.Template, error) {
 		for _, file := range files {
 			filename := file.Name()
 			if strings.HasSuffix(filename, ".html") {
-				allFiles = append(allFiles, templatesDir+filename)
+				allFiles = append(allFiles, filepath.Join(templatesDir, filename))
 			}
 		}
 	} else {
