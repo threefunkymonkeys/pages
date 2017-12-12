@@ -9,15 +9,17 @@ import (
 	"strings"
 )
 
-var leftDelimiter = "{{"
-var rightDelimiter = "}}"
-var viewsDir = "./views"
-
 type Page struct {
 	Title    string
 	Template string
 	Subject  interface{}
 	Context  interface{}
+}
+
+type Renderer struct {
+	leftDelimiter  string
+	rightDelimiter string
+	viewsDir       string
 }
 
 type layoutContent struct {
@@ -26,20 +28,24 @@ type layoutContent struct {
 	Content template.HTML
 }
 
-func SetEscapeStrings(left, right string) {
-	leftDelimiter = left
-	rightDelimiter = right
+func NewRenderer() *Renderer {
+	return &Renderer{viewsDir: "./views", leftDelimiter: "{{", rightDelimiter: "}}"}
 }
 
-func SetViewsDir(dirname string) {
-	viewsDir = dirname
+func (r *Renderer) SetEscapeStrings(left, right string) {
+	r.leftDelimiter = left
+	r.rightDelimiter = right
 }
 
-func parseTemplates(baseDir string) (*template.Template, error) {
+func (r *Renderer) SetViewsDir(dirname string) {
+	r.viewsDir = dirname
+}
+
+func (r *Renderer) parseTemplates(baseDir string) (*template.Template, error) {
 	var templates []string
 
 	for _, dir := range []string{"shared", "layout", baseDir} {
-		files, err := getTemplateFilenames(filepath.Join(viewsDir, dir))
+		files, err := getTemplateFilenames(filepath.Join(r.viewsDir, dir))
 		if err != nil {
 			return nil, err
 		}
@@ -47,7 +53,7 @@ func parseTemplates(baseDir string) (*template.Template, error) {
 		templates = append(templates, files...)
 	}
 
-	return template.New("").Delims(leftDelimiter, rightDelimiter).ParseFiles(templates...)
+	return template.New("").Delims(r.leftDelimiter, r.rightDelimiter).ParseFiles(templates...)
 }
 
 func getTemplateFilenames(dir string) ([]string, error) {
@@ -68,10 +74,10 @@ func getTemplateFilenames(dir string) ([]string, error) {
 	return filenames, nil
 }
 
-func Render(writer io.Writer, page Page, tplDir string) error {
+func (r *Renderer) Render(writer io.Writer, page Page, tplDir string) error {
 	buf := bytes.NewBuffer([]byte{})
 
-	templates, err := parseTemplates(tplDir)
+	templates, err := r.parseTemplates(tplDir)
 
 	if err != nil {
 		return err
@@ -81,7 +87,7 @@ func Render(writer io.Writer, page Page, tplDir string) error {
 
 	content := layoutContent{Page: page, Content: template.HTML(buf.String())}
 
-	templates.ExecuteTemplate(writer, "application.html", content)
+	err = templates.ExecuteTemplate(writer, "application.html", content)
 
-	return nil
+	return err
 }
