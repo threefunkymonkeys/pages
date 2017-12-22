@@ -2,6 +2,7 @@ package pages
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -20,6 +21,7 @@ type Renderer struct {
 	leftDelimiter  string
 	rightDelimiter string
 	viewsDir       string
+	scripts        []string
 }
 
 type layoutContent struct {
@@ -41,6 +43,25 @@ func (r *Renderer) SetViewsDir(dirname string) {
 	r.viewsDir = dirname
 }
 
+func tplFunctions(r *Renderer) template.FuncMap {
+	return template.FuncMap{
+		"add_script": func(path string) string {
+			r.scripts = append(r.scripts, path)
+
+			return ""
+		},
+		"render_scripts": func() template.HTML {
+			content := ""
+
+			for _, path := range r.scripts {
+				content += fmt.Sprintf("<script src=\"%s\"></script>\n", path)
+			}
+
+			return template.HTML(content)
+		},
+	}
+}
+
 func (r *Renderer) parseTemplates(baseDir string) (*template.Template, error) {
 	var templates []string
 
@@ -53,7 +74,7 @@ func (r *Renderer) parseTemplates(baseDir string) (*template.Template, error) {
 		templates = append(templates, files...)
 	}
 
-	return template.New("").Delims(r.leftDelimiter, r.rightDelimiter).ParseFiles(templates...)
+	return template.New("").Delims(r.leftDelimiter, r.rightDelimiter).Funcs(tplFunctions(r)).ParseFiles(templates...)
 }
 
 func getTemplateFilenames(dir string) ([]string, error) {
